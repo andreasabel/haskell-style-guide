@@ -1,3 +1,6 @@
+This document has been shamelessly plagiarized from Johan Tibell
+[https://github.com/tibbe/haskell-style-guide].
+
 Haskell Style Guide
 ===================
 
@@ -16,7 +19,7 @@ Maximum line length is *80 characters*.
 ### Indentation
 
 Tabs are illegal. Use spaces for indenting.  Indent your code blocks
-with *4 spaces*.  Indent the `where` keyword two spaces to set it
+with *2* or *4 spaces*.  Indent the `where` keyword two spaces to set it
 apart from the rest of the code and indent the definitions in a
 `where` clause 2 spaces. Some examples:
 
@@ -31,11 +34,23 @@ sayHello = do
 filter :: (a -> Bool) -> [a] -> [a]
 filter _ []     = []
 filter p (x:xs)
-    | p x       = x : filter p xs
-    | otherwise = filter p xs
+  | p x       = x : filter p xs
+  | otherwise = filter p xs
 ```
 
-### Blank Lines
+Observe the _Pfenning principle_.  Indentation should be stable
+under renaming of identifiers (alpha-equality).
+This means a line break before extra indentation.
+
+The following indentation scheme is not stable under renaming of `filter`.
+```haskell
+filter :: (a -> Bool) -> [a] -> [a]
+filter _ []                 = []
+filter p (x:xs) | p x       = x : filter p xs
+                | otherwise = filter p xs
+```
+
+### Blank Lines (Not enforced)
 
 One blank line between top-level definitions.  No blank lines between
 type signatures and function definitions.  Add one blank line between
@@ -47,34 +62,39 @@ are large.  Use your judgement.
 Surround binary operators with a single space on either side.  Use
 your better judgement for the insertion of spaces around arithmetic
 operators but always be consistent about whitespace on either side of
-a binary operator.  Don't insert a space after a lambda.
+a binary operator.  Insert a space after a lambda.
 
 ### Data Declarations
 
-Align the constructors in a data type definition.  Example:
+Align the constructors in a data type definition.
+Align the separating vertical bar `|` with the `=`.
+Add haddockumentation to the type (prefix) and each constructor (postfix).
+The constructor documentation should be on the following line.
+Very short documentation can be directly after the constructor (cf. records).
+Example:
 
 ```haskell
-data Tree a = Branch !a !(Tree a) !(Tree a)
-            | Leaf
-```
-
-For long type names the following formatting is also acceptable:
-
-```haskell
-data HttpException
-    = InvalidStatusCode Int
-    | MissingContentHeader
+-- | Strict binary trees.
+data Tree a
+  = Branch !a !(Tree a) !(Tree a)
+      -- ^ Labelled binary node.
+  | Leaf
+      -- ^ Empty tree.
+  deriving (Eq, Ord)
 ```
 
 Format records as follows:
 
 ```haskell
+-- | Personal data used by the simple match-maker.
 data Person = Person
-    { firstName :: !String  -- ^ First name
-    , lastName  :: !String  -- ^ Last name
-    , age       :: !Int     -- ^ Age
-    } deriving (Eq, Show)
+  { firstName :: !String  -- ^ First name.
+  , lastName  :: !String  -- ^ Last name.
+  , age       :: !Int     -- ^ Age.
+  } deriving (Eq, Show)
 ```
+
+Document each field.  End documentation with a dot.
 
 ### List Declarations
 
@@ -82,23 +102,13 @@ Align the elements in the list.  Example:
 
 ```haskell
 exceptions =
-    [ InvalidStatusCode
-    , MissingContentHeader
-    , InternalServerError
-    ]
+  [ InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError
+  ]
 ```
 
-Optionally, you can skip the first newline.  Use your judgement.
-
-```haskell
-directions = [ North
-             , East
-             , South
-             , West
-             ]
-```
-
-### Pragmas
+### Pragmas (Not enforced)
 
 Put pragmas immediately following the function they apply to.
 Example:
@@ -125,14 +135,16 @@ your judgement. Some examples:
 
 ```haskell
 bar :: IO ()
-bar = forM_ [1, 2, 3] $ \n -> do
-          putStrLn "Here comes a number!"
-          print n
+bar = do
+  forM_ [1, 2, 3] $ \ n -> do
+    putStrLn "Here comes a number!"
+    print n
 
 foo :: IO ()
-foo = alloca 10 $ \a ->
-      alloca 20 $ \b ->
-      cFunction a b
+foo = do
+  alloca 10 $ \ a ->
+  alloca 20 $ \ b ->
+  cFunction a b
 ```
 
 ### Export Lists
@@ -141,18 +153,18 @@ Format export lists as follows:
 
 ```haskell
 module Data.Set
-    (
-      -- * The @Set@ type
-      Set
-    , empty
-    , singleton
+  (
+    -- * The @Set@ type
+    Set
+  , empty
+  , singleton
 
-      -- * Querying
-    , member
-    ) where
+    -- * Querying
+  , member
+  ) where
 ```
 
-### If-then-else clauses
+### If-then-else clauses (Not enforced)
 
 Generally, guards and pattern matches should be preferred over if-then-else
 clauses, where possible.  Short cases should usually be put on a single line
@@ -214,9 +226,10 @@ foobar = case something of
 or as
 
 ```haskell
-foobar = case something of
-             Just j  -> foo
-             Nothing -> bar
+foobar =
+  case something of
+    Just j  -> foo
+    Nothing -> bar
 ```
 
 Align the `->` arrows when it helps readability.
@@ -233,9 +246,92 @@ Imports should be grouped in the following order:
 Put a blank line between each group of imports.  The imports in each
 group should be sorted alphabetically, by module name.
 
-Always use explicit import lists or `qualified` imports for standard
-and third party libraries.  This makes the code more robust against
-changes in these libraries.  Exception: The Prelude.
+A typical module header looks like this.
+
+```haskell
+-- LANGUAGE pragmas
+
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+
+{- | Module haddockumentation.
+
+ This module demonstrates some standard practice.
+ -}
+
+-- Control.* imports
+
+import Control.Applicative hiding (empty)
+import Control.Monad.Reader
+
+-- Data.* imports
+
+import Data.Foldable as Fold
+import Data.List as List
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Seq (Seq)
+import qualified Data.Seq as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import qualified Data.Traversable as Trav
+
+-- other external imports
+
+import Test.QuickCheck
+
+-- Agda imports in groups
+
+import Agda.Interaction.Options
+
+import qualified Agda.Syntax.Abstract as A
+import Agda.Syntax.Common as Common
+import qualified Agda.Syntax.Concrete as C
+import qualified Agda.Syntax.Concrete.Name as C
+import Agda.Syntax.Internal as I
+
+import Agda.TypeChecking.Monad as TCM
+import Agda.TypeChecking.Reduce
+import Agda.TypeChecking.Substitute
+
+-- last: Agda.Utils.*
+
+import Agda.Utils.Lens
+import Agda.Utils.Maybe
+import Agda.Utils.Null
+import Agda.Utils.Tuple
+
+-- very last: Agda.Utils.Impossible
+
+#include ../../undefined.h
+import Agda.Utils.Impossible
+```
+
+All the short module names given in the above example are mandatory:
+`Map`, `Set`, `Seq` (these should also import the type separately
+unqualified, to avoid things like `Map.Map`), `Fold`, `Trav`, and the
+Agda-specific `Common`, `C`, `A`, `I` for syntax and `TCM` for the
+type-checking monad.
+
+Structuring module content
+--------------------------
+
+Put the main function of the module first.
+
+Structure the auxiliary functions into sensible groups.  Start a topic
+with a heading like this:
+
+```haskell
+------------------------------------------------------------------------
+-- * Monoid structure on positions.
+------------------------------------------------------------------------
+```
+
+This means 72 dashes, a haddock heading, and again 72 dashes.  Haddock
+subheadings can also be used.
+
+Put boring instances very last in the file.  (Like `KillRange` instances.)
 
 Comments
 --------
@@ -277,14 +373,13 @@ For fields that require longer comments format them like so:
 
 ```haskell
 data Record = Record
-    { -- | This is a very very very long comment that is split over
-      -- multiple lines.
-      field1 :: !Text
-      
-      -- | This is a second very very very long comment that is split
-      -- over multiple lines.
-    , field2 :: !Int
-    }
+  { field1 :: !Text
+      -- ^ This is a very very very long comment that is split over
+      --   multiple lines.
+  , field2 :: !Int
+      -- ^ This is a second very very very long comment that is split
+      --   over multiple lines.
+  }
 ```
 
 ### End-of-Line Comments
@@ -303,7 +398,7 @@ foo n = salt * 32 + 9
     salt = 453645243  -- Magic hash salt.
 ```
 
-### Links
+### Links (Not enforced)
 
 Use in-line links economically.  You are encouraged to add links for
 API names.  It is not necessary to add links for all API names in a
@@ -332,7 +427,7 @@ Use singular when naming modules e.g. use `Data.Map` and
 `Data.ByteString.Internal` instead of `Data.Maps` and
 `Data.ByteString.Internals`.
 
-Dealing with laziness
+Dealing with laziness (Not enforced)
 ---------------------
 
 By default, use strict data types and lazy functions.
@@ -402,10 +497,7 @@ mysum = go 0
     go acc (x:xs) = go (acc + x) xs
 ```
 
-Misc
-----
-
-### Point-free style ###
+## Point-free style ##
 
 Avoid over-using point-free style. For example, this is hard to read:
 
@@ -414,7 +506,75 @@ Avoid over-using point-free style. For example, this is hard to read:
 f = (g .) . h
 ```
 
+Use the application operator `$` to reduce parentheses, especially
+long ranging-ones.
+
+Monadic programming
+-------------------
+
+### Loops ###
+
+Use `mapM` and `mapM_` when the loop-body is short.  Use `forM` and
+`forM_` for large loop bodies.
+
+```haskell
+-- Bad:
+constructorApplications :: [(I.Arg Term, I.Dom Type)] -> TCM (Maybe [Nat])
+constructorApplications args = do
+  xs <- mapM (\(e, t) -> do
+                 t <- reduce (unDom t)
+                 constructorApplication (unArg e) (ignoreSharingType t))
+             args
+  return (concat <$> sequence xs)
+
+-- Good:
+constructorApplications :: [(I.Arg Term, I.Dom Type)] -> TCM (Maybe [Nat])
+constructorApplications args = do
+  xs <- forM args $ \ (e, t) -> do
+    t <- reduce $ unDom t
+    constructorApplication (unArg e) $ ignoreSharingType t
+  return $ concat <$> sequence xs
+```
+
+### Case on monadic computations ###
+
+Use the extra monadic combinators in `Agda.Utils.Monad`, `Agda.Utils.Maybe` etc.
+
+```haskell
+callCompiler
+  :: FilePath  -- ^ The path to the compiler.
+  -> [String]  -- ^ Command-line arguments.
+  -> TCM ()
+callCompiler cmd args = do
+  merrors <- callCompiler' cmd args
+  case merrors of
+    Nothing     -> return ()
+    Just errors -> typeError (CompilationError errors)
+```
+
+Rather than a binding followed by a trivial case,
+use a version of `whenM` for the `Maybe` type:
+
+```haskell
+callCompiler cmd args = do
+  whenJustM (callCompiler' cmd args) $ \ errors -> do
+    typeError $ CompilationError errors
+```
+
+Saves a volatile binding `merrors` and a boring `return ()`.
+Note that a further eta-contraction would remove the binding `errors`
+which actually helps reading the code.
+
+```haskell
+callCompiler cmd args = do
+  whenJustM (callCompiler' cmd args) $ typeError . CompilationError
+```
+
+
+Misc
+----
+
 ### Warnings ###
 
-Code should be compilable with `-Wall -Werror`. There should be no
-warnings.
+Agda uses a subset of the GHC warnings as errors.  See Agda.cabal.
+
