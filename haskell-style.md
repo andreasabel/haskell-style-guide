@@ -9,6 +9,22 @@ this project.  I've tried to cover the major areas of formatting and
 naming.  When something isn't covered by this guide you should stay
 consistent with the code in the other modules.
 
+General guidelines for good code quality
+----------------------------------------
+
+* Write code with verification in mind.
+
+  * Write a purpose statement for each function, data type and constructor.
+
+  * State invariants, pre- and postconditions.
+
+  If your code does not lend itself to expressing its properties,
+  that is a hint that it is not structured well enough or not modular well enough.
+
+* Structure your code into small components whose functionality
+  can be understood independently.
+
+
 Formatting
 ----------
 
@@ -497,7 +513,50 @@ mysum = go 0
     go acc (x:xs) = go (acc + x) xs
 ```
 
-## Point-free style ##
+Style
+-----
+
+### Records instead of tuples! ###
+
+Use tuples only for throw-away data structures, like the return type
+of a local function.  For _meaningful combinations_ of data, use records!
+
+Example:
+
+```haskell
+-- | Modules: Top-level pragmas plus other top-level declarations.
+type Module = ([Pragma], [Declaration])
+```
+
+Better:
+
+
+```haskell
+-- | Modules: Top-level pragmas plus other top-level declarations.
+data Module = Module
+  { modulePragmas :: [Pragma]
+  , moduleDecls   :: [Declaration]
+  }
+```
+
+### Newtypes instead of type synonyms! ###
+
+Using `newtype` gives some semantics to a type synonym, allows custom
+printing, etc.
+
+Example:
+
+```haskell
+-- | Top-level module names.  Used in connection with the file system.
+--
+--   Invariant: The list must not be empty.
+
+newtype TopLevelModuleName
+  = TopLevelModuleName { moduleNameParts :: [String] }
+  deriving (Show, Eq, Ord, Typeable)
+```
+
+### Point-free style ###
 
 Avoid over-using point-free style. For example, this is hard to read:
 
