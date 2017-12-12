@@ -1,5 +1,6 @@
 This document has been shamelessly plagiarized from Johan Tibell
-[https://github.com/tibbe/haskell-style-guide].
+[https://github.com/tibbe/haskell-style-guide],
+and then extended to fit my needs.
 
 Haskell Style Guide
 ===================
@@ -8,6 +9,10 @@ This is a short document describing the preferred coding style for
 this project.  I've tried to cover the major areas of formatting and
 naming.  When something isn't covered by this guide you should stay
 consistent with the code in the other modules.
+
+Some sections are labelled with __Suggestion__,
+meaning that I do not have a strong opinion here.
+Some points only apply to the Agda project.
 
 General guidelines for good code quality
 ----------------------------------------
@@ -30,12 +35,14 @@ Formatting
 
 ### Line Length
 
-Maximum line length is *80 characters*.
+Maximum line length should be *80 characters*.
+Exceptions are possible, for instance for lines that do debug printing.
 
 ### Indentation
 
 Tabs are illegal. Use spaces for indenting.  Indent your code blocks
-with *2* or *4 spaces*.  Indent the `where` keyword two spaces to set it
+with *2* space.
+Suggestion: Indent the `where` keyword two spaces to set it
 apart from the rest of the code and indent the definitions in a
 `where` clause 2 spaces. Some examples:
 
@@ -66,12 +73,15 @@ filter p (x:xs) | p x       = x : filter p xs
                 | otherwise = filter p xs
 ```
 
-### Blank Lines (Not enforced)
+### Suggestion: Blank Lines
 
-One blank line between top-level definitions.  No blank lines between
-type signatures and function definitions.  Add one blank line between
-functions in a type class instance declaration if the functions bodies
-are large.  Use your judgement.
+One blank line between top-level definitions.  If the definition is
+long and/or contains blank lines itself, two blank lines are also
+fine.
+No blank lines between type signatures and function definitions.
+Add one blank line between functions in a type class instance
+declaration if the functions bodies are large.
+Use your judgement.
 
 ### Whitespace
 
@@ -114,7 +124,7 @@ Document each field.  End documentation with a dot.
 
 ### List Declarations
 
-Align the elements in the list.  Example:
+Align the elements in the list, putting the commata in the front.  Example:
 
 ```haskell
 exceptions =
@@ -124,7 +134,7 @@ exceptions =
   ]
 ```
 
-### Pragmas (Not enforced)
+### Suggestion: Pragmas
 
 Put pragmas immediately following the function they apply to.
 Example:
@@ -191,24 +201,25 @@ and pattern matches can't be used, you can align if-then-else clauses
 you like you would normal expressions:
 
 ```haskell
-foo = if ...
-      then ...
-      else ...
+foo =
+  if ...
+  then ...
+  else ...
 ```
 
-Otherwise, you should be consistent with the 4-spaces indent rule, and the
+Otherwise, you should be consistent with the 2-spaces indent rule, and the
 `then` and the `else` keyword should be aligned.  Examples:
 
 ```haskell
 foo = do
-    someCode
-    if condition
-        then someMoreCode
-        else someAlternativeCode
+  someCode
+  if condition
+    then someMoreCode
+    else someAlternativeCode
 ```
 
 ```haskell
-foo = bar $ \qux -> if predicate qux
+foo = bar $ \ qux -> if predicate qux
     then doSomethingSilly
     else someOtherCode
 ```
@@ -217,15 +228,15 @@ The same rule applies to nested do blocks:
 
 ```haskell
 foo = do
-    instruction <- decodeInstruction
-    skip <- load Memory.skip
-    if skip == 0x0000
-        then do
-            execute instruction
-            addCycles $ instructionCycles instruction
-        else do
-            store Memory.skip 0x0000
-            addCycles 1
+  instruction <- decodeInstruction
+  skip <- load Memory.skip
+  if skip == 0x0000
+    then do
+      execute instruction
+      addCycles $ instructionCycles instruction
+    else do
+      store Memory.skip 0x0000
+      addCycles 1
 ```
 
 ### Case expressions
@@ -235,8 +246,8 @@ the two following styles:
 
 ```haskell
 foobar = case something of
-    Just j  -> foo
-    Nothing -> bar
+  Just j  -> foo
+  Nothing -> bar
 ```
 
 or as
@@ -367,11 +378,22 @@ Comment every exported data type.  Function example:
 -- | Send a message on a socket.  The socket must be in a connected
 -- state.  Returns the number of bytes sent.  Applications are
 -- responsible for ensuring that all data has been sent.
-send :: Socket      -- ^ Connected socket
-     -> ByteString  -- ^ Data to send
-     -> IO Int      -- ^ Bytes sent
+send :: Socket      -- ^ Connected socket.
+     -> ByteString  -- ^ Data to send.
+     -> IO Int      -- ^ Bytes sent.
 ```
+For longer function names, start a new line before `::`
+to avoid deep indentation.
 
+```haskell
+-- | Send a message on a socket.  The socket must be in a connected
+-- state.  Returns the number of bytes sent.  Applications are
+-- responsible for ensuring that all data has been sent.
+sendAMessageOnASocket
+  :: Socket      -- ^ Connected socket.
+  -> ByteString  -- ^ Data to send.
+  -> IO Int      -- ^ Bytes sent.
+```
 For functions the documentation should give enough information to
 apply the function without looking at the function's definition.
 
@@ -380,8 +402,8 @@ Record example:
 ```haskell
 -- | Bla bla bla.
 data Person = Person
-    { age  :: !Int     -- ^ Age
-    , name :: !String  -- ^ First name
+    { age  :: !Int     -- ^ Age.
+    , name :: !String  -- ^ First name.
     }
 ```
 
@@ -405,8 +427,8 @@ comments for data type definitions.  Some examples:
 
 ```haskell
 data Parser = Parser
-    !Int         -- Current position
-    !ByteString  -- Remaining input
+    !Int         -- Current position.
+    !ByteString  -- Remaining input.
 
 foo :: Int -> Int
 foo n = salt * 32 + 9
@@ -414,7 +436,7 @@ foo n = salt * 32 + 9
     salt = 453645243  -- Magic hash salt.
 ```
 
-### Links (Not enforced)
+### Suggestion: Links
 
 Use in-line links economically.  You are encouraged to add links for
 API names.  It is not necessary to add links for all API names in a
@@ -443,76 +465,6 @@ Use singular when naming modules e.g. use `Data.Map` and
 `Data.ByteString.Internal` instead of `Data.Maps` and
 `Data.ByteString.Internals`.
 
-Dealing with laziness (Not enforced)
----------------------
-
-By default, use strict data types and lazy functions.
-
-### Data types
-
-Constructor fields should be strict, unless there's an explicit reason
-to make them lazy. This avoids many common pitfalls caused by too much
-laziness and reduces the number of brain cycles the programmer has to
-spend thinking about evaluation order.
-
-```haskell
--- Good
-data Point = Point
-    { pointX :: !Double  -- ^ X coordinate
-    , pointY :: !Double  -- ^ Y coordinate
-    }
-```
-
-```haskell
--- Bad
-data Point = Point
-    { pointX :: Double  -- ^ X coordinate
-    , pointY :: Double  -- ^ Y coordinate
-    }
-```
-
-Additionally, unpacking simple fields often improves performance and
-reduces memory usage:
-
-```haskell
-data Point = Point
-    { pointX :: {-# UNPACK #-} !Double  -- ^ X coordinate
-    , pointY :: {-# UNPACK #-} !Double  -- ^ Y coordinate
-    }
-```
-
-As an alternative to the `UNPACK` pragma, you can put
-
-```haskell
-{-# OPTIONS_GHC -funbox-strict-fields #-}
-```
-
-at the top of the file. Including this flag in the file inself instead
-of e.g. in the Cabal file is preferable as the optimization will be
-applied even if someone compiles the file using other means (i.e. the
-optimization is attached to the source code it belongs to).
-
-Note that `-funbox-strict-fields` applies to all strict fields, not
-just small fields (e.g. `Double` or `Int`). If you're using GHC 7.4 or
-later you can use `NOUNPACK` to selectively opt-out for the unpacking
-enabled by `-funbox-strict-fields`.
-
-### Functions
-
-Have function arguments be lazy unless you explicitly need them to be
-strict.
-
-The most common case when you need strict function arguments is in
-recursion with an accumulator:
-
-```haskell
-mysum :: [Int] -> Int
-mysum = go 0
-  where
-    go !acc []    = acc
-    go acc (x:xs) = go (acc + x) xs
-```
-
 Style
 -----
 
@@ -521,14 +473,14 @@ Style
 Use tuples only for throw-away data structures, like the return type
 of a local function.  For _meaningful combinations_ of data, use records!
 
-Example:
+Instead of:
 
 ```haskell
 -- | Modules: Top-level pragmas plus other top-level declarations.
 type Module = ([Pragma], [Declaration])
 ```
 
-Better:
+Better write:
 
 
 ```haskell
@@ -537,6 +489,26 @@ data Module = Module
   { modulePragmas :: [Pragma]
   , moduleDecls   :: [Declaration]
   }
+```
+
+### Data types instead of `Bool`, `Maybe`, `Either` ... ###
+
+Use hand-rolled data types with meaningful constructor names
+instead of assembling your data structures with
+`Bool`, `Maybe`, `Either` etc.
+
+Bad example (parser generator file):
+```haskell
+LamBindsAbsurd :: { Either [Either Hiding LamBinding] [Expr] }
+LamBindsAbsurd
+  : DomainFreeBinding LamBinds  { Left $ map Right $1 ++ $2 }
+  | TypedBindings LamBinds      { Left $ Right (DomainFull $1) : $2 }
+  | DomainFreeBindingAbsurd     { case $1 of
+                                    Left lb -> Left $ map Right lb
+                                    Right es -> Right es }
+  | TypedBindings               { Left [Right $ DomainFull $1] }
+  | '(' ')'                     { Left [Left NotHidden] }
+  | '{' '}'                     { Left [Left Hidden] }
 ```
 
 ### Newtypes instead of type synonyms! ###
@@ -576,8 +548,8 @@ Monadic programming
 Use `mapM` and `mapM_` when the loop-body is short.  Use `forM` and
 `forM_` for large loop bodies.
 
+Bad:
 ```haskell
--- Bad:
 constructorApplications :: [(I.Arg Term, I.Dom Type)] -> TCM (Maybe [Nat])
 constructorApplications args = do
   xs <- mapM (\(e, t) -> do
@@ -585,8 +557,9 @@ constructorApplications args = do
                  constructorApplication (unArg e) (ignoreSharingType t))
              args
   return (concat <$> sequence xs)
-
--- Good:
+```
+Good:
+```haskell
 constructorApplications :: [(I.Arg Term, I.Dom Type)] -> TCM (Maybe [Nat])
 constructorApplications args = do
   xs <- forM args $ \ (e, t) -> do
@@ -621,8 +594,8 @@ callCompiler cmd args = do
 ```
 
 Saves a volatile binding `merrors` and a boring `return ()`.
-Note that a further eta-contraction would remove the binding `errors`
-which actually helps reading the code.
+Note that a further eta-contraction would remove the binding `errors`,
+yet this binding actually helps reading the code.
 
 ```haskell
 callCompiler cmd args = do
@@ -630,10 +603,79 @@ callCompiler cmd args = do
 ```
 
 
+Suggestion: Dealing with laziness
+---------------------
+
+By default, use strict data types and lazy functions.
+
+### Data types
+
+Constructor fields should be strict, unless there's an explicit reason
+to make them lazy. This avoids many common pitfalls caused by too much
+laziness and reduces the number of brain cycles the programmer has to
+spend thinking about evaluation order.
+
+```haskell
+-- Good
+data Point = Point
+  { pointX :: !Double  -- ^ X coordinate
+  , pointY :: !Double  -- ^ Y coordinate
+  }
+```
+
+```haskell
+-- Bad
+data Point = Point
+  { pointX :: Double  -- ^ X coordinate
+  , pointY :: Double  -- ^ Y coordinate
+  }
+```
+
+Additionally, unpacking simple fields often improves performance and
+reduces memory usage:
+
+```haskell
+data Point = Point
+  { pointX :: {-# UNPACK #-} !Double  -- ^ X coordinate
+  , pointY :: {-# UNPACK #-} !Double  -- ^ Y coordinate
+  }
+```
+
+As an alternative to the `UNPACK` pragma, you can put
+
+```haskell
+{-# OPTIONS_GHC -funbox-strict-fields #-}
+```
+
+at the top of the file. Including this flag in the file inself instead
+of e.g. in the Cabal file is preferable as the optimization will be
+applied even if someone compiles the file using other means (i.e. the
+optimization is attached to the source code it belongs to).
+
+Note that `-funbox-strict-fields` applies to all strict fields, not
+just small fields (e.g. `Double` or `Int`). If you're using GHC 7.4 or
+later you can use `NOUNPACK` to selectively opt-out for the unpacking
+enabled by `-funbox-strict-fields`.
+
+### Functions
+
+Have function arguments be lazy unless you explicitly need them to be
+strict.
+
+The most common case when you need strict function arguments is in
+recursion with an accumulator:
+
+```haskell
+mysum :: [Int] -> Int
+mysum = go 0
+  where
+    go !acc []    = acc
+    go acc (x:xs) = go (acc + x) xs
+```
+
 Misc
 ----
 
 ### Warnings ###
 
 Agda uses a subset of the GHC warnings as errors.  See Agda.cabal.
-

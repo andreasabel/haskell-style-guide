@@ -38,9 +38,9 @@
   "Sets the current buffer to use Haskell Style. Meant to be
   added to `haskell-mode-hook'"
   (interactive)
-  (setq tab-width 4
-        haskell-indentation-layout-offset 4
-        haskell-indentation-left-offset 4
-        haskell-indentation-ifte-offset 4))
+  (setq tab-width 2
+        haskell-indentation-layout-offset 2
+        haskell-indentation-left-offset 2
+        haskell-indentation-ifte-offset 2))
 
 (provide 'haskell-style)
