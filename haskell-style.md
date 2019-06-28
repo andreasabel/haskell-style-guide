@@ -35,8 +35,10 @@ Formatting
 
 ### Line Length
 
-Maximum line length should be *80 characters*.
-Exceptions are possible, for instance for lines that do debug printing.
+Maximum line length should be 80 characters in general.
+No complaints if you extend this to 100 characters now and then.
+Exceptions beyond 100 characters are possible,
+for instance for lines that do debug printing.
 
 ### Indentation
 
@@ -65,7 +67,8 @@ Observe the _Pfenning principle_.  Indentation should be stable
 under renaming of identifiers (alpha-equality).
 This means a line break before extra indentation.
 
-The following indentation scheme is not stable under renaming of `filter`.
+The following indentation scheme is not stable under length-changing
+renaming of any of `filter`, `p`, `x`, `xs`.
 ```haskell
 filter :: (a -> Bool) -> [a] -> [a]
 filter _ []                 = []
