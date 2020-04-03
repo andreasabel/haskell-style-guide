@@ -451,6 +451,14 @@ if:
 
 * Only for the first occurrence of each API name in the comment (don't
   bother repeating a link)
+  
+In the following example, the user of the function may need to call
+`normalise`, so a link to the definition of `normalise` is added:
+
+```haskell
+-- | Precondition: levels are 'normalise'd.
+equalLevel' :: forall m. MonadConversion m => Level -> Level -> m ()
+```
 
 Naming
 ------
