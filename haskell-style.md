@@ -81,7 +81,7 @@ filter p (x:xs) | p x       = x : filter p xs
 One blank line between top-level definitions.  If the definition is
 long and/or contains blank lines itself, two blank lines are also
 fine.
-No blank lines between type signatures and function definitions.
+Usually, no blank lines between type signatures and function definitions.
 Add one blank line between functions in a type class instance
 declaration if the functions bodies are large.
 Use your judgement.
@@ -385,15 +385,15 @@ send :: Socket      -- ^ Connected socket.
      -> ByteString  -- ^ Data to send.
      -> IO Int      -- ^ Bytes sent.
 ```
-For longer function names, start a new line before `::`
+For longer function names, start a new line after `::`
 to avoid deep indentation.
 
 ```haskell
 -- | Send a message on a socket.  The socket must be in a connected
 -- state.  Returns the number of bytes sent.  Applications are
 -- responsible for ensuring that all data has been sent.
-sendAMessageOnASocket
-  :: Socket      -- ^ Connected socket.
+sendAMessageOnASocket ::
+     Socket      -- ^ Connected socket.
   -> ByteString  -- ^ Data to send.
   -> IO Int      -- ^ Bytes sent.
 ```
@@ -451,7 +451,7 @@ if:
 
 * Only for the first occurrence of each API name in the comment (don't
   bother repeating a link)
-  
+
 In the following example, the user of the function may need to call
 `normalise`, so a link to the definition of `normalise` is added:
 
@@ -466,7 +466,7 @@ Naming
 Use camel case (e.g. `functionName`) when naming functions and upper
 camel case (e.g. `DataType`) when naming data types.
 
-For readability reasons, don't capitalize all letters when using an
+Suggestion: For readability reasons, don't capitalize all letters when using an
 abbreviation.  For example, write `HttpServer` instead of
 `HTTPServer`.  Exception: Two letter abbreviations, e.g. `IO`.
 
@@ -581,7 +581,7 @@ constructorApplications args = do
 
 ### Case on monadic computations ###
 
-Use the extra monadic combinators in `Agda.Utils.Monad`, `Agda.Utils.Maybe` etc.
+Use `\case` or the extra monadic combinators in `Agda.Utils.Monad`, `Agda.Utils.Maybe` etc.
 
 ```haskell
 callCompiler
@@ -595,8 +595,18 @@ callCompiler cmd args = do
     Just errors -> typeError (CompilationError errors)
 ```
 
-Rather than a binding followed by a trivial case,
-use a version of `whenM` for the `Maybe` type:
+Since `merrors` is only defined to immediately eliminate it by a case, use `\case` instead:
+
+```haskell
+{-# LANGUAGE LambdaCase #-}
+...
+  callCompiler' cmd args >>= \case
+    Nothing     -> return ()
+    Just errors -> typeError (CompilationError errors)
+```
+
+In this particular case,
+we best use a version of `whenM` for the `Maybe` type:
 
 ```haskell
 callCompiler cmd args = do
@@ -604,7 +614,7 @@ callCompiler cmd args = do
     typeError $ CompilationError errors
 ```
 
-Saves a volatile binding `merrors` and a boring `return ()`.
+Saves the boring case with just a `return ()`.
 Note that a further eta-contraction would remove the binding `errors`,
 yet this binding actually helps reading the code.
 
@@ -615,7 +625,7 @@ callCompiler cmd args = do
 
 
 Suggestion: Dealing with laziness
----------------------
+---------------------------------
 
 By default, use strict data types and lazy functions.
 
